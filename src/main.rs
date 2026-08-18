@@ -1,3 +1,5 @@
+mod frame;
+
 use std::io::Read;
 use std::process::{Command, Stdio};
 
@@ -37,6 +39,11 @@ fn main() {
         match stdout.read_exact(&mut buffer) {
             Ok(_) => {
                 frame_count += 1;
+
+                if frame_count == 1000 {
+                    let ascii = frame::frame_to_ascii(&buffer, width, height);
+                    println!("{}", ascii);
+                }
             }
             Err(e) if e.kind() == std::io::ErrorKind::UnexpectedEof => {
                 // ffmpeg ran out of video frames safely
