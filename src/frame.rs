@@ -1,4 +1,4 @@
-const GRADIENT: &[u8] = b" .:-=+*#%@";
+const GRADIENT: &[u8] = b" .'`^\",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$";
 
 /// Convert one raw RGB frame buffer into a printable ASCII string.
 pub fn frame_to_ascii(buffer: &[u8], width: usize, height: usize) -> String {
@@ -15,16 +15,6 @@ pub fn frame_to_ascii(buffer: &[u8], width: usize, height: usize) -> String {
             let luminance: f32 = 0.299 * r + 0.587 * g + 0.114 * b;
 
             let idx = (luminance / 255.0 * (GRADIENT.len() - 1) as f32) as usize;
-
-            // TODO: figure out the index into `buffer` for pixel (col, row).
-            // Hint: buffer is flat RGB data, row-major order.
-            // Each pixel takes 3 bytes. Each row takes width*3 bytes.
-            // pixel_index = (row * width + col) * 3
-            // r = buffer[pixel_index], g = buffer[pixel_index+1], b = buffer[pixel_index+2]
-
-            // TODO: compute luminance using the formula above (as f32 math, then cast to u8 or usize)
-
-            // TODO: map luminance to a GRADIENT index and push GRADIENT[index] as char into `output`
 
             output.push(GRADIENT[idx] as char);
         }
