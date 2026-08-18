@@ -1,12 +1,46 @@
 mod frame;
+mod render;
 
-use std::io::Read;
+use std::io::{self, Read};
+// use std::io::{self, Read, Write};
 use std::process::{Command, Stdio};
+
+// helper function to get the source video width and height
+fn get_video_dimensions(path: &str) -> (usize, usize) {
+    let output = Command::new("ffprobe")
+        .args([
+            "-v",
+            "error",
+            "-select_streams",
+            "v:0",
+            "-show_entries",
+            "stream=width,height",
+            "-of",
+            "csv=s=x:p=0",
+            path,
+        ])
+        .output()
+        .expect("Failed to excute ffprobe");
+
+    let result = String::from_utf8(output.stdout).expect("Invalid UTF-8 from ffprobe");
+
+    // parses string into numbers (1920x1080)
+    let parts: Vec<&str> = result.trim().split('x').collect();
+
+    let source_width = parts[0].parse::<usize>().unwrap_or(16);
+    let sourcec_height = parts[1].parse::<usize>().unwrap_or(9);
+
+    (source_width, sourcec_height)
+}
 
 fn main() {
     let video_path = "assets/bad_apple.mp4";
+
+    let (source_width, source_height) = get_video_dimensions(video_path);
+
     let width = 80;
-    let height = 45;
+    let height = (width as f32 * (source_height as f32 / source_width as f32) * 0.5) as usize;
+    // let height = 45;
 
     let mut child = Command::new("ffmpeg")
         .args([
@@ -28,6 +62,7 @@ fn main() {
         .expect("failed to spawn ffmpeg. is it on PATH?");
 
     let mut stdout = child.stdout.take().expect("no stdout handle");
+    let mut term = io::stdout();
 
     let frame_size = width * height * 3; // 3 bytes per pixel (RGB)
     let mut buffer = vec![0u8; frame_size];
@@ -40,10 +75,8 @@ fn main() {
             Ok(_) => {
                 frame_count += 1;
 
-                if frame_count == 1000 {
-                    let ascii = frame::frame_to_ascii(&buffer, width, height);
-                    println!("{}", ascii);
-                }
+                let ascii = frame::frame_to_ascii(&buffer, width, height);
+                render::draw_frame(&mut term, &ascii);
             }
             Err(e) if e.kind() == std::io::ErrorKind::UnexpectedEof => {
                 // ffmpeg ran out of video frames safely
