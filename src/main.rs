@@ -1,9 +1,11 @@
+mod audio;
 mod frame;
 mod render;
 
 use std::io::{self, Read};
-// use std::io::{self, Read, Write};
 use std::process::{Command, Stdio};
+
+use crate::audio::start_audio_playback;
 
 // helper function to get the source video width and height
 fn get_video_dimensions(path: &str) -> (usize, usize) {
@@ -35,6 +37,7 @@ fn get_video_dimensions(path: &str) -> (usize, usize) {
 
 fn main() {
     let video_path = "assets/bad_apple.mp4";
+    let audio_path = audio::extract_audio(&video_path);
 
     let (source_width, source_height) = get_video_dimensions(video_path);
 
@@ -68,6 +71,9 @@ fn main() {
     let mut buffer = vec![0u8; frame_size];
 
     let mut frame_count = 0;
+
+    // start audio playback concurrently right before the video frame loop starts
+    let (_stream, _sink) = start_audio_playback(&audio_path);
 
     loop {
         // fills the buffer completely or returns an error
