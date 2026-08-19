@@ -63,8 +63,4 @@ pub fn get_video_fps(path: &str) -> Result<f64, String> {
             .parse::<f64>()
             .map_err(|_| format!("Unexpected out put format: {}", stdout))
     }
-
-    // TODO: run ffprobe with -show_entries stream=r_frame_rate
-    // TODO: parse output like "30/1" or "30000/1001"
-    // TODO: split on '/', parse both sides as f64, divide numerator/denominator
 }

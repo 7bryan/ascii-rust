@@ -42,13 +42,16 @@ fn main() {
 
     let (source_width, source_height) = get_video_dimensions(video_path);
 
-    let width = 80;
+    let (term_cols, term_rows) = crossterm::terminal::size().unwrap_or((80, 24));
+    let width = term_cols as usize;
     let height = (width as f32 * (source_height as f32 / source_width as f32) * 0.5) as usize;
-    // let height = 45;
+    let height = height.min(term_rows as usize); // don't exceed terminal height either
+
+    // let width = 80;
+    // let height = (width as f32 * (source_height as f32 / source_width as f32) * 0.5) as usize;
 
     let mut child = Command::new("ffmpeg")
         .args([
-            // decode the video using ffmpeg
             "-i",
             video_path,
             "-f",
@@ -74,10 +77,12 @@ fn main() {
     let mut frame_count = 0;
 
     let fps = clock::get_video_fps(video_path).unwrap_or(30.0);
-    let timer = clock::Clock::new(fps);
 
     // start audio playback concurrently right before the video frame loop starts
     let (_stream, _sink) = start_audio_playback(&audio_path);
+    let timer = clock::Clock::new(fps);
+
+    render::init(&mut term);
 
     loop {
         let target = timer.target_frame();
@@ -86,25 +91,27 @@ fn main() {
             std::thread::sleep(std::time::Duration::from_millis(5));
             continue;
         }
-        // fills the buffer completely or returns an error
+
         match stdout.read_exact(&mut buffer) {
             Ok(_) => {
                 frame_count += 1;
 
-                let ascii = frame::frame_to_ascii(&buffer, width, height);
-                render::draw_frame(&mut term, &ascii);
+                if frame_count >= target {
+                    let ascii = frame::frame_to_ascii(&buffer, width, height);
+                    render::draw_frame(&mut term, &ascii);
+                }
             }
             Err(e) if e.kind() == std::io::ErrorKind::UnexpectedEof => {
-                // ffmpeg ran out of video frames safely
                 break;
             }
             Err(e) => {
-                // handles actual reading errors
                 eprintln!("Error reading frame: {}", e);
                 break;
             }
         }
     }
+
+    render::cleanup(&mut term);
 
     println!("Total frames read: {}", frame_count);
 
