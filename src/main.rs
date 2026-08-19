@@ -1,4 +1,5 @@
 mod audio;
+mod clock;
 mod frame;
 mod render;
 
@@ -72,10 +73,19 @@ fn main() {
 
     let mut frame_count = 0;
 
+    let fps = clock::get_video_fps(video_path).unwrap_or(30.0);
+    let timer = clock::Clock::new(fps);
+
     // start audio playback concurrently right before the video frame loop starts
     let (_stream, _sink) = start_audio_playback(&audio_path);
 
     loop {
+        let target = timer.target_frame();
+
+        if frame_count > target {
+            std::thread::sleep(std::time::Duration::from_millis(5));
+            continue;
+        }
         // fills the buffer completely or returns an error
         match stdout.read_exact(&mut buffer) {
             Ok(_) => {
