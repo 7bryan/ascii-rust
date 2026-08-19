@@ -11,16 +11,13 @@ pub fn init(term: &mut impl Write) {
     execute!(term, Clear(ClearType::All), Hide).unwrap();
 }
 
-/// Call once after the render loop ends, so the user's terminal
-/// isn't left with a permanently hidden cursor.
+/// call only once.
 pub fn cleanup(term: &mut impl Write) {
     execute!(term, Show).unwrap();
 }
 
 pub fn draw_frame(term: &mut impl Write, ascii: &str) {
-    // No Clear here on purpose: clearing then redrawing creates a visible
-    // blank flash every frame. Since every frame is the same fixed
-    // width/height, just move to the top-left and overwrite in place.
+    // removing Clear
     execute!(term, MoveTo(0, 0)).unwrap();
     write!(term, "{}", ascii).unwrap();
     term.flush().unwrap();

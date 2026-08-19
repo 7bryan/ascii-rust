@@ -37,7 +37,7 @@ fn get_video_dimensions(path: &str) -> (usize, usize) {
 }
 
 fn main() {
-    let video_path = "assets/bad_apple.mp4";
+    let video_path = "assets/nartohsaskeh.mp4";
     let audio_path = audio::extract_audio(&video_path);
 
     let (source_width, source_height) = get_video_dimensions(video_path);
@@ -47,8 +47,8 @@ fn main() {
     let height = (width as f32 * (source_height as f32 / source_width as f32) * 0.5) as usize;
     let height = height.min(term_rows as usize); // don't exceed terminal height either
 
-    // let width = 80;
-    // let height = (width as f32 * (source_height as f32 / source_width as f32) * 0.5) as usize;
+    // Flip this to false to fall back to the faster grayscale renderer.
+    let use_color = true;
 
     let mut child = Command::new("ffmpeg")
         .args([
@@ -97,7 +97,11 @@ fn main() {
                 frame_count += 1;
 
                 if frame_count >= target {
-                    let ascii = frame::frame_to_ascii(&buffer, width, height);
+                    let ascii = if use_color {
+                        frame::frame_to_ascii_color(&buffer, width, height)
+                    } else {
+                        frame::frame_to_ascii(&buffer, width, height)
+                    };
                     render::draw_frame(&mut term, &ascii);
                 }
             }
