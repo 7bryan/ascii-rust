@@ -3,6 +3,7 @@ mod clock;
 mod frame;
 mod render;
 
+use std::env;
 use std::io::{self, Read};
 use std::process::{Command, Stdio};
 
@@ -37,8 +38,13 @@ fn get_video_dimensions(path: &str) -> (usize, usize) {
 }
 
 fn main() {
-    let video_path = "assets/bad_apple.mp4";
-    let audio_path = audio::extract_audio(&video_path);
+    let video_path_string = env::args()
+        .nth(1)
+        .expect("Error: Please provide a valid video path\nUsage: cargo run -- <path_to_video>");
+
+    let video_path: &str = &video_path_string;
+
+    let audio_path = audio::extract_audio(video_path);
 
     let (source_width, source_height) = get_video_dimensions(video_path);
 
