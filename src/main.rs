@@ -37,7 +37,7 @@ fn get_video_dimensions(path: &str) -> (usize, usize) {
 }
 
 fn main() {
-    let video_path = "assets/nartohsaskeh.mp4";
+    let video_path = "assets/bad_apple.mp4";
     let audio_path = audio::extract_audio(&video_path);
 
     let (source_width, source_height) = get_video_dimensions(video_path);
